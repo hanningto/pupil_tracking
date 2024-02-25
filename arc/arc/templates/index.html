@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Tag adding</title>
+        
+	{% load bootstrap5 %}
+	{% bootstrap_css %}
+	{% bootstrap_javascript %}
+    </head>
+    <body>
+        <div class = "container">
+        <center>
+            <h1>Add a Pupil Tag below</h1>
+            <div>
+                <form action="" method="POST">
+                    {% csrf_token %}
+    
+                    {{ form.as_p }}<!--template tag for the form-->
+    
+                    <input type="submit" value="submit">
+                </form> 
+                <a href="{% url 'info' %}">Check list</a> 
+    
+            </div>        
+
+        </center>
+        </div>
+            
+    </body>
+</html>

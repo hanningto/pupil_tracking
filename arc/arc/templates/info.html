@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>info page</title>
+	{% load bootstrap5 %}
+ 	{% bootstrap_css %}
+ 	{% bootstrap_javascript %}
+    </head>
+    <body>
+	<div class = "container>"
+        <center>
+            <h1>pupil information</h1>
+        <div>
+            {% if rfid_tags %}
+            <div class = "table">
+            <table class = "table" >
+                <thead>
+                    <th>TAG NUMBER</th>
+                    <th>PUPIL NAME</th>
+                </thead>
+                {% for tag in rfid_tags %}
+                <tr>
+                    <td>{{ tag.tag_no }}</td>
+                    <td>{{ tag.pupil_name }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+	   </div>
+            {% else %}
+                <p>NO RFID TAGS</p>
+            {% endif %}
+
+
+        </div>
+
+        </center>
+	</div>
+        
+    </body>
+</html>
