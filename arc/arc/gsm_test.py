@@ -1,69 +1,39 @@
 import serial
 import time
-from threading import Thread, Lock
-from curses import ascii
 
-# Enable Serial Communication
-ser = serial.Serial()
-ser.port = "/dev/ttyS0"
-ser.baudrate = 115200
-ser.timeout = 1
+# Replace '/dev/ttyS0' with the actual serial port your GSM module is connected to
+ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
 
+def send_at_command(command, timeout=1):
+    ser.write((command + '\r\n').encode())
+    time.sleep(timeout)
+    response = ser.read(ser.inWaiting()).decode()
+    return response
 
-def doRead(ser, lock):
-    while True:
+def check_gsm_status():
+    response = send_at_command('AT')
+    return 'OK' in response
 
-        lock.acquire()
-
-        try:
-            rcv = ser.readline().decode().strip('\n')
-        except:
-            pass
-        else:
-            while rcv != '':
-                print(rcv)
-                rcv = ser.readline().decode().strip('\n').strip('\r')
-        lock.release()
-        time.sleep(.15)
-
-ser.open()
-ser_lock = Lock()
-
-
-th = Thread(target=doRead, args=(ser, ser_lock))
-th.daemon = True
-th.start()
-
-
-gotlock = ser_lock.acquire()
-
-ser.write(b'AT+CMGF=1\r')
-ser.write(b'AT+CPMS="ME","SM","ME"\r')
-ser_lock.release()
-time.sleep(.15)
-
+def check_network_registration():
+    response = send_at_command('AT+CREG?')
+    return '+CREG: 0,1' in response or '+CREG: 0,5' in response
 
 try:
-    ser_lock.acquire()
-except:
-    time.sleep(.1)
-else:
-    ser.write(b'AT+CPIN?\r')
-    ser_lock.release()
-    time.sleep(.15)
+    # Check if the GSM module is ready
+    if check_gsm_status():
+        print('GSM module is ready.')
 
-
-while True:
-    try:
-        cmd = input()
-    except:
-        pass
-    else:
-        ser_lock.acquire()
-
-        if '^z' in cmd:
-            ser.write(bytes('{}\r'.format(ascii.ctrl('z')), 'utf-8'))
+        # Check network registration status
+        if check_network_registration():
+            print('Connected to the GSM network.')
         else:
-            ser.write(bytes('{}\r'.format(cmd), 'utf-8'))
-        ser_lock.release()
-        time.sleep(.15)
+            print('Not registered on the GSM network. Check SIM card and signal strength.')
+
+    else:
+        print('Unable to communicate with the GSM module. Check connections and power.')
+
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+finally:
+    ser.close()
